@@ -219,8 +219,19 @@
 		const prevVote    = getStoredVote( sectionId );
 
 		// --- Optimistic UI update ---
-		const newUp   = voteType ===  1 ? prevUp   + 1 : ( prevVote ===  1 ? prevUp   - 1 : prevUp   );
-		const newDown = voteType === -1 ? prevDown + 1 : ( prevVote === -1 ? prevDown - 1 : prevDown );
+		let newUp   = prevUp;
+		let newDown = prevDown;
+
+		if ( voteType === 0 ) {
+			// Toggle off: subtract the previous vote.
+			if ( prevVote ===  1 ) newUp   = Math.max( 0, prevUp   - 1 );
+			if ( prevVote === -1 ) newDown = Math.max( 0, prevDown - 1 );
+		} else {
+			// New vote or change: add to target, subtract previous if switching.
+			if ( voteType ===  1 ) { newUp   = prevUp   + 1; if ( prevVote === -1 ) newDown = Math.max( 0, prevDown - 1 ); }
+			if ( voteType === -1 ) { newDown = prevDown + 1; if ( prevVote ===  1 ) newUp   = Math.max( 0, prevUp   - 1 ); }
+		}
+
 		updateCounts( widget, newUp, newDown );
 		setActiveButton( widget, voteType );
 		storeVote( sectionId, voteType );
@@ -260,9 +271,10 @@
 					updateCounts( widget, json.data.up, json.data.down );
 					setActiveButton( widget, json.data.user_vote );
 					storeVote( sectionId, json.data.user_vote );
-					showFeedback( widget, json.data.message || CV.i18n.thanks, false );
-					// Trigger animation on the button that was just voted.
-					triggerAnimation( clickedBtn );
+					// Only animate when a vote was cast (not when removed).
+					if ( json.data.user_vote !== 0 ) {
+						triggerAnimation( clickedBtn );
+					}
 				} else {
 					// Revert optimistic update.
 					updateCounts( widget, prevUp, prevDown );
@@ -313,14 +325,18 @@
 		const widget = btn.closest( '.cv-widget' );
 		if ( ! widget ) return;
 
-		const voteType  = parseInt( btn.dataset.voteType, 10 );
-		if ( voteType !== 1 && voteType !== -1 ) return;
+		const rawVoteType = parseInt( btn.dataset.voteType, 10 );
+		if ( rawVoteType !== 1 && rawVoteType !== -1 ) return;
 
 		const sectionId = resolveSectionId( widget );
 		if ( ! sectionId ) {
 			showFeedback( widget, 'Section ID is not configured.', true );
 			return;
 		}
+
+		const prevVoteType = getStoredVote( sectionId );
+		// If clicking the same button that is already active → toggle off (send 0).
+		const voteType = ( prevVoteType === rawVoteType ) ? 0 : rawVoteType;
 
 		submitVote( widget, btn, sectionId, voteType );
 	} );

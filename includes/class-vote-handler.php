@@ -38,9 +38,9 @@ class Content_Vote_Handler {
 			return self::error( __( 'Invalid section identifier.', 'content-vote' ) );
 		}
 
-		// --- Validate vote_type ---------------------------------------------------
-		$vote_type = (int) ( $payload['vote_type'] ?? 0 );
-		if ( ! in_array( $vote_type, array( 1, -1 ), true ) ) {
+		// --- Validate vote_type (1, -1, or 0 for "remove vote") ------------------
+		$vote_type = (int) ( $payload['vote_type'] ?? 999 );
+		if ( ! in_array( $vote_type, array( 1, -1, 0 ), true ) ) {
 			return self::error( __( 'Invalid vote type.', 'content-vote' ) );
 		}
 
@@ -49,6 +49,13 @@ class Content_Vote_Handler {
 		$page_url = self::normalise_url( $raw_url );
 		if ( empty( $page_url ) ) {
 			return self::error( __( 'Invalid page URL.', 'content-vote' ) );
+		}
+
+		// Reject admin-area URLs — prevents votes from the Elementor editor preview.
+		$admin_path = wp_parse_url( admin_url(), PHP_URL_PATH );
+		$req_path   = wp_parse_url( $page_url, PHP_URL_PATH ) ?? '/';
+		if ( $admin_path && str_starts_with( $req_path, $admin_path ) ) {
+			return self::error( __( 'Voting is not available in the editor.', 'content-vote' ) );
 		}
 
 		// Reject URLs that point to external domains.
@@ -64,24 +71,36 @@ class Content_Vote_Handler {
 			return self::error( __( 'You are voting too quickly. Please wait before voting again.', 'content-vote' ) );
 		}
 
-		// --- Deduplication --------------------------------------------------------
+		// --- Toggle / Deduplication -----------------------------------------------
 		$existing = Content_Vote_Database::get_existing_vote( $visitor_hash, $section_id, $page_url );
 
 		if ( null !== $existing ) {
-			if ( $existing === $vote_type ) {
-				// Same vote again — just return current counts.
+			if ( 0 === $vote_type || $existing === $vote_type ) {
+				// Remove vote: either explicit removal or clicking the same button again.
+				Content_Vote_Database::delete_vote( $visitor_hash, $section_id, $page_url );
 				$counts = Content_Vote_Database::get_counts( $section_id, $page_url );
 				return array(
 					'success'   => true,
-					'message'   => __( 'You have already voted.', 'content-vote' ),
+					'message'   => '',
 					'up'        => $counts['up'],
 					'down'      => $counts['down'],
-					'user_vote' => $existing,
+					'user_vote' => 0,
 				);
 			}
 			// Different vote — change it.
 			Content_Vote_Database::change_vote( $visitor_hash, $section_id, $page_url, $vote_type );
 		} else {
+			if ( 0 === $vote_type ) {
+				// Nothing to remove.
+				$counts = Content_Vote_Database::get_counts( $section_id, $page_url );
+				return array(
+					'success'   => true,
+					'message'   => '',
+					'up'        => $counts['up'],
+					'down'      => $counts['down'],
+					'user_vote' => 0,
+				);
+			}
 			// New vote.
 			if ( ! Content_Vote_Database::insert_vote( $visitor_hash, $section_id, $page_url, $vote_type ) ) {
 				return self::error( __( 'Could not save your vote. Please try again.', 'content-vote' ) );
@@ -93,7 +112,7 @@ class Content_Vote_Handler {
 
 		return array(
 			'success'   => true,
-			'message'   => __( 'Thank you for your feedback!', 'content-vote' ),
+			'message'   => '',
 			'up'        => $counts['up'],
 			'down'      => $counts['down'],
 			'user_vote' => $vote_type,

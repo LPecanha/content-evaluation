@@ -110,6 +110,32 @@ class Content_Vote_Database {
 	}
 
 	/**
+	 * Deletes a visitor's vote (toggle-off scenario).
+	 *
+	 * @param string $visitor_hash
+	 * @param string $section_id
+	 * @param string $page_url
+	 *
+	 * @return bool
+	 */
+	public static function delete_vote( string $visitor_hash, string $section_id, string $page_url ): bool {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$result = $wpdb->delete(
+			self::table(),
+			array(
+				'visitor_hash' => $visitor_hash,
+				'section_id'   => $section_id,
+				'page_url'     => $page_url,
+			),
+			array( '%s', '%s', '%s' )
+		);
+
+		return false !== $result;
+	}
+
+	/**
 	 * Updates an existing vote (vote-change scenario).
 	 *
 	 * @param string $visitor_hash Hashed visitor fingerprint.
