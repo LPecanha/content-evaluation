@@ -1,0 +1,226 @@
+/**
+ * Content Vote — Public Styles
+ *
+ * @package ContentVote
+ */
+
+/* =====================================================================
+   Base widget
+   ===================================================================== */
+.cv-widget {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+	font-family: inherit;
+}
+
+.cv-widget__heading {
+	margin: 0 0 12px;
+	font-size: inherit;
+	font-weight: 600;
+	color: inherit;
+}
+
+/* =====================================================================
+   Buttons row
+   ===================================================================== */
+.cv-widget__buttons {
+	display: flex;
+	flex-direction: row;  /* overridden per breakpoint via Elementor selector */
+	flex-wrap: wrap;
+	gap: 12px;
+	align-items: center;
+}
+
+/* =====================================================================
+   Individual button
+   ===================================================================== */
+.cv-widget__btn {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+
+	width: 56px;
+	height: 56px;
+
+	padding: 0;
+	margin: 0;
+	border: 2px solid transparent;
+	border-radius: 50%;
+	background-color: #f0f0f0;
+	color: #555;
+
+	cursor: pointer;
+	transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.cv-widget__btn:focus-visible {
+	outline: 3px solid #2196F3;
+	outline-offset: 2px;
+}
+
+.cv-widget__btn:hover:not(:disabled) {
+	background-color: #e0e0e0;
+	transform: scale(1.07);
+}
+
+.cv-widget__btn:active:not(:disabled) {
+	transform: scale(0.95);
+}
+
+.cv-widget__btn:disabled {
+	cursor: default;
+	opacity: 0.7;
+}
+
+.cv-widget__btn--up.is-active {
+	background-color: #2196F3;
+	border-color: #2196F3;
+	color: #fff;
+}
+
+.cv-widget__btn--down.is-active {
+	background-color: #F44336;
+	border-color: #F44336;
+	color: #fff;
+}
+
+/* =====================================================================
+   Vote animations
+   ===================================================================== */
+@keyframes cv-pop-up {
+	0%   { transform: scale(1); }
+	30%  { transform: scale(1.4) translateY(-6px); }
+	60%  { transform: scale(0.88) translateY(0); }
+	80%  { transform: scale(1.08); }
+	100% { transform: scale(1); }
+}
+
+@keyframes cv-pop-down {
+	0%   { transform: scale(1); }
+	30%  { transform: scale(1.4) translateY(6px); }
+	60%  { transform: scale(0.88) translateY(0); }
+	80%  { transform: scale(1.08); }
+	100% { transform: scale(1); }
+}
+
+@keyframes cv-shake {
+	0%, 100% { transform: rotate(0deg); }
+	20%       { transform: rotate(-12deg) scale(1.1); }
+	40%       { transform: rotate(12deg) scale(1.1); }
+	60%       { transform: rotate(-8deg); }
+	80%       { transform: rotate(8deg); }
+}
+
+.cv-widget__btn--up.cv-animating {
+	animation: cv-pop-up 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.cv-widget__btn--down.cv-animating {
+	animation: cv-pop-down 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* For emoji style — shake instead of pop */
+.cv-widget--emoji .cv-widget__btn.cv-animating {
+	animation: cv-shake 0.5s ease both;
+}
+
+/* =====================================================================
+   FA Icons
+   ===================================================================== */
+.cv-widget__icon {
+	display: block;
+	width: 50%;
+	height: 50%;
+	font-size: 1em;  /* inherits button font-size so Elementor slider controls it */
+	line-height: 1;
+	fill: currentColor;
+	pointer-events: none;
+}
+
+/* Ensure FA <i> tags also scale with the button */
+.cv-widget__btn i.cv-widget__icon {
+	width: auto;
+	height: auto;
+}
+
+/* =====================================================================
+   Emoji style
+   ===================================================================== */
+.cv-widget--emoji .cv-widget__btn {
+	width: 56px;
+	height: 56px;
+}
+
+.cv-widget--emoji .cv-widget__emoji {
+	display: block;
+	font-size: 1.4em;
+	line-height: 1;
+	pointer-events: none;
+}
+
+/* =====================================================================
+   Labels & counts
+   ===================================================================== */
+.cv-widget__label {
+	display: block;
+	font-size: 0.6em;
+	font-weight: 600;
+	line-height: 1;
+	pointer-events: none;
+}
+
+.cv-widget__count {
+	display: block;
+	font-size: 0.6em;
+	font-weight: 700;
+	line-height: 1;
+	pointer-events: none;
+	min-width: 1ch;
+	text-align: center;
+}
+
+/* =====================================================================
+   Feedback message
+   ===================================================================== */
+.cv-widget__feedback {
+	min-height: 1.2em;
+	font-size: 0.85em;
+	color: #555;
+	transition: opacity 0.3s ease;
+}
+
+.cv-widget__feedback:empty {
+	display: none;
+}
+
+.cv-widget__feedback--success {
+	color: #2e7d32;
+}
+
+.cv-widget__feedback--error {
+	color: #c62828;
+}
+
+/* =====================================================================
+   Loading spinner
+   ===================================================================== */
+.cv-widget__btn .cv-spinner {
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	border: 2px solid currentColor;
+	border-top-color: transparent;
+	border-radius: 50%;
+	animation: cv-spin 0.6s linear infinite;
+}
+
+@keyframes cv-spin {
+	to { transform: rotate(360deg); }
+}

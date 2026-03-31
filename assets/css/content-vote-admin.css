@@ -1,0 +1,157 @@
+/**
+ * Content Vote — Admin Report Styles
+ *
+ * @package ContentVote
+ */
+
+/* =====================================================================
+   Page wrapper — full width, like native WP list tables
+   ===================================================================== */
+.cv-admin-report {
+	/* No max-width — uses the full WordPress admin content area */
+}
+
+/* =====================================================================
+   Filter form
+   ===================================================================== */
+.cv-filters {
+	background: #fff;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 14px 18px;
+	margin: 16px 0;
+}
+
+.cv-filters__row {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.cv-filters__row label {
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.cv-filters__row select {
+	min-width: 200px;
+}
+
+/* =====================================================================
+   Summary bar
+   ===================================================================== */
+.cv-summary-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 10px;
+	font-size: 13px;
+	color: #555;
+}
+
+.cv-export-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+/* =====================================================================
+   Results table
+   ===================================================================== */
+.cv-report-table {
+	table-layout: fixed;
+	width: 100%;
+}
+
+.cv-report-table th,
+.cv-report-table td {
+	vertical-align: middle;
+}
+
+.cv-col-page    { width: 22%; }
+.cv-col-section { width: 16%; }
+.cv-col-up      { width: 7%;  text-align: center; }
+.cv-col-down    { width: 7%;  text-align: center; }
+.cv-col-total   { width: 7%;  text-align: center; }
+.cv-col-score   { width: 8%;  text-align: center; }
+.cv-col-bar     { width: 18%; }
+.cv-col-date    { width: 15%; }
+
+.cv-col-page a {
+	word-break: break-word;
+}
+
+.cv-up-count   { color: #1565C0; font-weight: 600; }
+.cv-down-count { color: #b71c1c; font-weight: 600; }
+
+/* Humanised section name */
+.cv-col-section {
+	word-break: break-word;
+}
+
+/* Raw slug shown below human name as a subtitle */
+.cv-section-raw {
+	display: block;
+	font-size: 11px;
+	color: #999;
+	margin-top: 2px;
+	font-family: monospace;
+}
+
+/* Score pill */
+.cv-score {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 12px;
+	font-weight: 700;
+	font-size: 12px;
+}
+
+.cv-score--positive {
+	background: #e8f5e9;
+	color: #2e7d32;
+}
+
+.cv-score--negative {
+	background: #ffebee;
+	color: #c62828;
+}
+
+/* Distribution bar */
+.cv-bar {
+	width: 100%;
+	height: 8px;
+	background: #ffcdd2;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.cv-bar__fill--up {
+	height: 100%;
+	background: #1565C0;
+	border-radius: 4px;
+	transition: width 0.3s ease;
+	min-width: 0;
+}
+
+/* =====================================================================
+   No results placeholder
+   ===================================================================== */
+.cv-no-results {
+	background: #f9f9f9;
+	border: 1px dashed #ccc;
+	border-radius: 4px;
+	padding: 32px;
+	text-align: center;
+	color: #888;
+}
+
+/* =====================================================================
+   Pagination
+   ===================================================================== */
+.cv-pagination {
+	margin-top: 12px;
+	display: flex;
+	justify-content: flex-end;
+}

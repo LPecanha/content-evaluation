@@ -1,0 +1,122 @@
+# Copyright (C) 2026 Lucas Peçanha
+# This file is distributed under the same license as the Content Vote package.
+msgid ""
+msgstr ""
+"Project-Id-Version: Content Vote 1.0.1\n"
+"Report-Msgid-Bugs-To: https://github.com/your-org/content-vote/issues\n"
+"POT-Creation-Date: 2026-03-31T00:00:00+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2026-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"X-Generator: WP-CLI 2.x\n"
+"X-Domain: content-vote\n"
+
+msgid "Content Vote"
+msgstr ""
+
+msgid "Content Vote Report"
+msgstr ""
+
+msgid "Was this content helpful?"
+msgstr ""
+
+msgid "Yes"
+msgstr ""
+
+msgid "No"
+msgstr ""
+
+msgid "Arrows (↑ ↓)"
+msgstr ""
+
+msgid "Like / Dislike"
+msgstr ""
+
+msgid "Emoji (😊 😞)"
+msgstr ""
+
+msgid "Show Vote Counts"
+msgstr ""
+
+msgid "Thank you for your feedback!"
+msgstr ""
+
+msgid "You have already voted."
+msgstr ""
+
+msgid "Could not save your vote. Please try again."
+msgstr ""
+
+msgid "Invalid section identifier."
+msgstr ""
+
+msgid "Invalid vote type."
+msgstr ""
+
+msgid "Invalid page URL."
+msgstr ""
+
+msgid "URL does not belong to this site."
+msgstr ""
+
+msgid "You are voting too quickly. Please wait before voting again."
+msgstr ""
+
+msgid "An error occurred. Please try again."
+msgstr ""
+
+msgid "Page URL"
+msgstr ""
+
+msgid "Section ID"
+msgstr ""
+
+msgid "Upvotes"
+msgstr ""
+
+msgid "Downvotes"
+msgstr ""
+
+msgid "Total Votes"
+msgstr ""
+
+msgid "Last Vote"
+msgstr ""
+
+msgid "Total"
+msgstr ""
+
+msgid "Score %"
+msgstr ""
+
+msgid "Distribution"
+msgstr ""
+
+msgid "— All Pages —"
+msgstr ""
+
+msgid "From"
+msgstr ""
+
+msgid "To"
+msgstr ""
+
+msgid "Filter"
+msgstr ""
+
+msgid "Clear"
+msgstr ""
+
+msgid "Export CSV"
+msgstr ""
+
+msgid "No votes found for the selected criteria."
+msgstr ""
+
+msgid "%d result"
+msgid_plural "%d results"
+msgstr[0] ""
+msgstr[1] ""
