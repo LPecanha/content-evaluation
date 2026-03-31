@@ -45,7 +45,7 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 	protected function register_controls(): void {
 
 		// =========================================================
-		// SECTION: Content
+		// CONTENT TAB — Section: Content
 		// =========================================================
 		$this->start_controls_section(
 			'section_content',
@@ -75,6 +75,7 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 				'label_off'    => esc_html__( 'Hide', 'content-vote' ),
 				'return_value' => 'yes',
 				'default'      => 'yes',
+				'separator'    => 'before',
 			)
 		);
 
@@ -98,13 +99,14 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 				'label_off'    => esc_html__( 'Hide', 'content-vote' ),
 				'return_value' => 'yes',
 				'default'      => 'yes',
+				'separator'    => 'before',
 			)
 		);
 
 		$this->end_controls_section();
 
 		// =========================================================
-		// SECTION: Icons & Labels
+		// CONTENT TAB — Section: Icons & Labels
 		// =========================================================
 		$this->start_controls_section(
 			'section_icons',
@@ -127,16 +129,12 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 			)
 		);
 
-		// Up icon — shown only for FA style.
 		$this->add_control(
 			'icon_up',
 			array(
 				'label'     => esc_html__( 'Positive Icon', 'content-vote' ),
 				'type'      => \Elementor\Controls_Manager::ICONS,
-				'default'   => array(
-					'value'   => 'fas fa-thumbs-up',
-					'library' => 'fa-solid',
-				),
+				'default'   => array( 'value' => 'fas fa-thumbs-up', 'library' => 'fa-solid' ),
 				'condition' => array( 'vote_style' => 'fa' ),
 			)
 		);
@@ -146,15 +144,11 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 			array(
 				'label'     => esc_html__( 'Negative Icon', 'content-vote' ),
 				'type'      => \Elementor\Controls_Manager::ICONS,
-				'default'   => array(
-					'value'   => 'fas fa-thumbs-down',
-					'library' => 'fa-solid',
-				),
+				'default'   => array( 'value' => 'fas fa-thumbs-down', 'library' => 'fa-solid' ),
 				'condition' => array( 'vote_style' => 'fa' ),
 			)
 		);
 
-		// Emoji pickers — shown only for emoji style.
 		$this->add_control(
 			'emoji_up',
 			array(
@@ -178,10 +172,11 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'label_up',
 			array(
-				'label'   => esc_html__( 'Positive Label', 'content-vote' ),
-				'type'    => \Elementor\Controls_Manager::TEXT,
-				'default' => esc_html__( 'Yes', 'content-vote' ),
-				'dynamic' => array( 'active' => true ),
+				'label'     => esc_html__( 'Positive Label', 'content-vote' ),
+				'type'      => \Elementor\Controls_Manager::TEXT,
+				'default'   => esc_html__( 'Yes', 'content-vote' ),
+				'dynamic'   => array( 'active' => true ),
+				'separator' => 'before',
 			)
 		);
 
@@ -198,7 +193,7 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 		$this->end_controls_section();
 
 		// =========================================================
-		// SECTION: Layout (responsive)
+		// CONTENT TAB — Section: Layout
 		// =========================================================
 		$this->start_controls_section(
 			'section_layout',
@@ -208,13 +203,80 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 			)
 		);
 
-		// Values are valid CSS flex-direction values (row / column).
+		// Heading vs Buttons direction (the outer widget row).
 		$this->add_responsive_control(
-			'layout',
+			'widget_direction',
 			array(
-				'label'     => esc_html__( 'Buttons Direction', 'content-vote' ),
-				'type'      => \Elementor\Controls_Manager::CHOOSE,
-				'options'   => array(
+				'label'          => esc_html__( 'Heading + Buttons Direction', 'content-vote' ),
+				'type'           => \Elementor\Controls_Manager::CHOOSE,
+				'options'        => array(
+					'column' => array(
+						'title' => esc_html__( 'Stacked (heading above)', 'content-vote' ),
+						'icon'  => 'eicon-navigation-vertical',
+					),
+					'row'    => array(
+						'title' => esc_html__( 'Inline (heading left)', 'content-vote' ),
+						'icon'  => 'eicon-navigation-horizontal',
+					),
+				),
+				'default'        => 'column',
+				'tablet_default' => 'column',
+				'mobile_default' => 'column',
+				'toggle'         => false,
+				'selectors'      => array(
+					'{{WRAPPER}} .cv-widget' => 'flex-direction: {{VALUE}};',
+				),
+			)
+		);
+
+		// Vertical alignment of heading and buttons when inline.
+		$this->add_responsive_control(
+			'widget_align_items',
+			array(
+				'label'          => esc_html__( 'Vertical Alignment', 'content-vote' ),
+				'type'           => \Elementor\Controls_Manager::CHOOSE,
+				'options'        => array(
+					'flex-start' => array( 'title' => esc_html__( 'Top', 'content-vote' ), 'icon' => 'eicon-v-align-top' ),
+					'center'     => array( 'title' => esc_html__( 'Middle', 'content-vote' ), 'icon' => 'eicon-v-align-middle' ),
+					'flex-end'   => array( 'title' => esc_html__( 'Bottom', 'content-vote' ), 'icon' => 'eicon-v-align-bottom' ),
+				),
+				'default'        => 'center',
+				'selectors'      => array(
+					'{{WRAPPER}} .cv-widget' => 'align-items: {{VALUE}};',
+				),
+				'condition'      => array( 'widget_direction' => 'row' ),
+			)
+		);
+
+		// Gap between heading and buttons block.
+		$this->add_responsive_control(
+			'widget_gap',
+			array(
+				'label'      => esc_html__( 'Gap (Heading ↔ Buttons)', 'content-vote' ),
+				'type'       => \Elementor\Controls_Manager::SLIDER,
+				'size_units' => array( 'px', 'em', 'rem' ),
+				'default'    => array( 'size' => 12, 'unit' => 'px' ),
+				'selectors'  => array(
+					'{{WRAPPER}} .cv-widget' => 'gap: {{SIZE}}{{UNIT}};',
+				),
+			)
+		);
+
+		$this->add_control(
+			'layout_divider',
+			array(
+				'type'      => \Elementor\Controls_Manager::DIVIDER,
+				'condition' => array( 'show_heading' => 'yes' ),
+			)
+		);
+
+		// Buttons row direction.
+		$this->add_responsive_control(
+			'buttons_direction',
+			array(
+				'label'          => esc_html__( 'Buttons Direction', 'content-vote' ),
+				'type'           => \Elementor\Controls_Manager::CHOOSE,
+				'options'        => array(
 					'row'    => array(
 						'title' => esc_html__( 'Horizontal', 'content-vote' ),
 						'icon'  => 'eicon-navigation-horizontal',
@@ -224,76 +286,38 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 						'icon'  => 'eicon-navigation-vertical',
 					),
 				),
-				'default'         => 'row',
-				'tablet_default'  => 'row',
-				'mobile_default'  => 'column',
-				'toggle'          => false,
-				'selectors'       => array(
+				'default'        => 'row',
+				'tablet_default' => 'row',
+				'mobile_default' => 'row',
+				'toggle'         => false,
+				'selectors'      => array(
 					'{{WRAPPER}} .cv-widget__buttons' => 'flex-direction: {{VALUE}};',
 				),
 			)
 		);
 
+		// Buttons horizontal alignment.
 		$this->add_responsive_control(
-			'alignment',
+			'buttons_justify',
 			array(
-				'label'     => esc_html__( 'Alignment', 'content-vote' ),
+				'label'     => esc_html__( 'Buttons Alignment', 'content-vote' ),
 				'type'      => \Elementor\Controls_Manager::CHOOSE,
 				'options'   => array(
-					'flex-start' => array(
-						'title' => esc_html__( 'Start', 'content-vote' ),
-						'icon'  => 'eicon-text-align-left',
-					),
-					'center'     => array(
-						'title' => esc_html__( 'Center', 'content-vote' ),
-						'icon'  => 'eicon-text-align-center',
-					),
-					'flex-end'   => array(
-						'title' => esc_html__( 'End', 'content-vote' ),
-						'icon'  => 'eicon-text-align-right',
-					),
+					'flex-start'    => array( 'title' => esc_html__( 'Start', 'content-vote' ), 'icon' => 'eicon-text-align-left' ),
+					'center'        => array( 'title' => esc_html__( 'Center', 'content-vote' ), 'icon' => 'eicon-text-align-center' ),
+					'flex-end'      => array( 'title' => esc_html__( 'End', 'content-vote' ), 'icon' => 'eicon-text-align-right' ),
+					'space-between' => array( 'title' => esc_html__( 'Spread', 'content-vote' ), 'icon' => 'eicon-justify-space-between-h' ),
 				),
 				'default'   => 'flex-start',
 				'selectors' => array(
-					'{{WRAPPER}} .cv-widget'          => 'align-items: {{VALUE}};',
 					'{{WRAPPER}} .cv-widget__buttons' => 'justify-content: {{VALUE}};',
 				),
 			)
 		);
 
-		$this->end_controls_section();
-
-		// =========================================================
-		// SECTION: Style — Buttons
-		// =========================================================
-		$this->start_controls_section(
-			'section_style_buttons',
-			array(
-				'label' => esc_html__( 'Buttons', 'content-vote' ),
-				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-			)
-		);
-
+		// Gap between individual buttons.
 		$this->add_responsive_control(
-			'button_size',
-			array(
-				'label'      => esc_html__( 'Button Size', 'content-vote' ),
-				'type'       => \Elementor\Controls_Manager::SLIDER,
-				'size_units' => array( 'px', 'em', 'rem' ),
-				'range'      => array(
-					'px' => array( 'min' => 20, 'max' => 120 ),
-				),
-				'default'       => array( 'size' => 56, 'unit' => 'px' ),
-				'tablet_default' => array( 'size' => 52, 'unit' => 'px' ),
-				'mobile_default' => array( 'size' => 48, 'unit' => 'px' ),
-				'selectors'     => array(
-					'{{WRAPPER}} .cv-widget__btn' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}}; font-size: calc({{SIZE}}{{UNIT}} * 0.45);',
-				),
-			)
-		);
-
-		$this->add_responsive_control(
-			'gap',
+			'buttons_gap',
 			array(
 				'label'      => esc_html__( 'Gap between buttons', 'content-vote' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
@@ -305,8 +329,154 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 			)
 		);
 
-		$this->start_controls_tabs( 'tabs_button_style' );
+		$this->end_controls_section();
 
+		// =========================================================
+		// STYLE TAB — Section: Container
+		// =========================================================
+		$this->start_controls_section(
+			'section_style_container',
+			array(
+				'label' => esc_html__( 'Container', 'content-vote' ),
+				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+			)
+		);
+
+		$this->add_group_control(
+			\Elementor\Group_Control_Background::get_type(),
+			array(
+				'name'     => 'container_bg',
+				'label'    => esc_html__( 'Background', 'content-vote' ),
+				'types'    => array( 'classic', 'gradient' ),
+				'selector' => '{{WRAPPER}} .cv-widget',
+			)
+		);
+
+		$this->add_responsive_control(
+			'container_padding',
+			array(
+				'label'      => esc_html__( 'Padding', 'content-vote' ),
+				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+				'size_units' => array( 'px', 'em', '%' ),
+				'selectors'  => array(
+					'{{WRAPPER}} .cv-widget' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+				),
+			)
+		);
+
+		$this->add_group_control(
+			\Elementor\Group_Control_Border::get_type(),
+			array(
+				'name'     => 'container_border',
+				'selector' => '{{WRAPPER}} .cv-widget',
+			)
+		);
+
+		$this->add_responsive_control(
+			'container_border_radius',
+			array(
+				'label'      => esc_html__( 'Border Radius', 'content-vote' ),
+				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+				'size_units' => array( 'px', '%', 'em' ),
+				'selectors'  => array(
+					'{{WRAPPER}} .cv-widget' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+				),
+			)
+		);
+
+		$this->add_group_control(
+			\Elementor\Group_Control_Box_Shadow::get_type(),
+			array(
+				'name'     => 'container_shadow',
+				'selector' => '{{WRAPPER}} .cv-widget',
+			)
+		);
+
+		$this->end_controls_section();
+
+		// =========================================================
+		// STYLE TAB — Section: Buttons
+		// =========================================================
+		$this->start_controls_section(
+			'section_style_buttons',
+			array(
+				'label' => esc_html__( 'Buttons', 'content-vote' ),
+				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+			)
+		);
+
+		// Label direction inside the button (icon + label row or column).
+		$this->add_responsive_control(
+			'btn_content_direction',
+			array(
+				'label'          => esc_html__( 'Icon + Label Direction', 'content-vote' ),
+				'type'           => \Elementor\Controls_Manager::CHOOSE,
+				'options'        => array(
+					'column' => array(
+						'title' => esc_html__( 'Vertical (icon top)', 'content-vote' ),
+						'icon'  => 'eicon-navigation-vertical',
+					),
+					'row'    => array(
+						'title' => esc_html__( 'Horizontal (icon left)', 'content-vote' ),
+						'icon'  => 'eicon-navigation-horizontal',
+					),
+				),
+				'default'        => 'column',
+				'tablet_default' => 'column',
+				'mobile_default' => 'column',
+				'toggle'         => false,
+				'selectors'      => array(
+					// Also set width/height to auto when row so fixed size doesn't crop.
+					'{{WRAPPER}} .cv-widget__btn' => 'flex-direction: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->add_responsive_control(
+			'button_size',
+			array(
+				'label'          => esc_html__( 'Button Min Size', 'content-vote' ),
+				'type'           => \Elementor\Controls_Manager::SLIDER,
+				'size_units'     => array( 'px', 'em', 'rem' ),
+				'range'          => array( 'px' => array( 'min' => 20, 'max' => 120 ) ),
+				'default'        => array( 'size' => 56, 'unit' => 'px' ),
+				'tablet_default' => array( 'size' => 52, 'unit' => 'px' ),
+				'mobile_default' => array( 'size' => 48, 'unit' => 'px' ),
+				'selectors'      => array(
+					'{{WRAPPER}} .cv-widget__btn' => 'min-width: {{SIZE}}{{UNIT}}; min-height: {{SIZE}}{{UNIT}}; font-size: calc({{SIZE}}{{UNIT}} * 0.45);',
+				),
+				'separator'      => 'before',
+			)
+		);
+
+		$this->add_responsive_control(
+			'btn_padding',
+			array(
+				'label'      => esc_html__( 'Padding', 'content-vote' ),
+				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+				'size_units' => array( 'px', 'em' ),
+				'selectors'  => array(
+					'{{WRAPPER}} .cv-widget__btn' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+				),
+			)
+		);
+
+		$this->add_responsive_control(
+			'btn_icon_gap',
+			array(
+				'label'      => esc_html__( 'Icon ↔ Label gap', 'content-vote' ),
+				'type'       => \Elementor\Controls_Manager::SLIDER,
+				'size_units' => array( 'px', 'em' ),
+				'default'    => array( 'size' => 4, 'unit' => 'px' ),
+				'selectors'  => array(
+					'{{WRAPPER}} .cv-widget__btn' => 'gap: {{SIZE}}{{UNIT}};',
+				),
+			)
+		);
+
+		$this->start_controls_tabs( 'tabs_button_style', array( 'separator' => 'before' ) );
+
+		// Tab: Normal.
 		$this->start_controls_tab( 'tab_btn_normal', array( 'label' => esc_html__( 'Normal', 'content-vote' ) ) );
 
 		$this->add_control(
@@ -314,7 +484,7 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 			array(
 				'label'     => esc_html__( 'Background', 'content-vote' ),
 				'type'      => \Elementor\Controls_Manager::COLOR,
-				'default'   => '#f0f0f0',
+				// No default — background is optional.
 				'selectors' => array(
 					'{{WRAPPER}} .cv-widget__btn' => 'background-color: {{VALUE}};',
 				),
@@ -335,6 +505,7 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 
 		$this->end_controls_tab();
 
+		// Tab: Hover.
 		$this->start_controls_tab( 'tab_btn_hover', array( 'label' => esc_html__( 'Hover', 'content-vote' ) ) );
 
 		$this->add_control(
@@ -342,37 +513,73 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 			array(
 				'label'     => esc_html__( 'Background', 'content-vote' ),
 				'type'      => \Elementor\Controls_Manager::COLOR,
-				'default'   => '#e0e0e0',
+				// No default.
 				'selectors' => array(
 					'{{WRAPPER}} .cv-widget__btn:hover' => 'background-color: {{VALUE}};',
 				),
 			)
 		);
 
+		$this->add_control(
+			'btn_text_hover',
+			array(
+				'label'     => esc_html__( 'Icon / Text Color', 'content-vote' ),
+				'type'      => \Elementor\Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}} .cv-widget__btn:hover' => 'color: {{VALUE}};',
+				),
+			)
+		);
+
 		$this->end_controls_tab();
 
+		// Tab: Voted (active state).
 		$this->start_controls_tab( 'tab_btn_active', array( 'label' => esc_html__( 'Voted', 'content-vote' ) ) );
 
 		$this->add_control(
-			'btn_up_active_color',
+			'btn_up_active_bg',
 			array(
-				'label'     => esc_html__( 'Positive Active BG', 'content-vote' ),
+				'label'     => esc_html__( 'Positive BG', 'content-vote' ),
 				'type'      => \Elementor\Controls_Manager::COLOR,
 				'default'   => '#2196F3',
 				'selectors' => array(
-					'{{WRAPPER}} .cv-widget__btn--up.is-active' => 'background-color: {{VALUE}}; color: #fff; border-color: {{VALUE}};',
+					'{{WRAPPER}} .cv-widget__btn--up.is-active' => 'background-color: {{VALUE}}; border-color: {{VALUE}};',
 				),
 			)
 		);
 
 		$this->add_control(
-			'btn_down_active_color',
+			'btn_up_active_text',
 			array(
-				'label'     => esc_html__( 'Negative Active BG', 'content-vote' ),
+				'label'     => esc_html__( 'Positive Color', 'content-vote' ),
+				'type'      => \Elementor\Controls_Manager::COLOR,
+				'default'   => '#ffffff',
+				'selectors' => array(
+					'{{WRAPPER}} .cv-widget__btn--up.is-active' => 'color: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->add_control(
+			'btn_down_active_bg',
+			array(
+				'label'     => esc_html__( 'Negative BG', 'content-vote' ),
 				'type'      => \Elementor\Controls_Manager::COLOR,
 				'default'   => '#F44336',
 				'selectors' => array(
-					'{{WRAPPER}} .cv-widget__btn--down.is-active' => 'background-color: {{VALUE}}; color: #fff; border-color: {{VALUE}};',
+					'{{WRAPPER}} .cv-widget__btn--down.is-active' => 'background-color: {{VALUE}}; border-color: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->add_control(
+			'btn_down_active_text',
+			array(
+				'label'     => esc_html__( 'Negative Color', 'content-vote' ),
+				'type'      => \Elementor\Controls_Manager::COLOR,
+				'default'   => '#ffffff',
+				'selectors' => array(
+					'{{WRAPPER}} .cv-widget__btn--down.is-active' => 'color: {{VALUE}};',
 				),
 			)
 		);
@@ -383,8 +590,9 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 		$this->add_group_control(
 			\Elementor\Group_Control_Border::get_type(),
 			array(
-				'name'     => 'btn_border',
-				'selector' => '{{WRAPPER}} .cv-widget__btn',
+				'name'      => 'btn_border',
+				'selector'  => '{{WRAPPER}} .cv-widget__btn',
+				'separator' => 'before',
 			)
 		);
 
@@ -393,7 +601,7 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 			array(
 				'label'      => esc_html__( 'Border Radius', 'content-vote' ),
 				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
-				'size_units' => array( 'px', '%' ),
+				'size_units' => array( 'px', '%', 'em' ),
 				'default'    => array(
 					'top'      => '50',
 					'right'    => '50',
@@ -419,7 +627,7 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 		$this->end_controls_section();
 
 		// =========================================================
-		// SECTION: Style — Heading
+		// STYLE TAB — Section: Heading
 		// =========================================================
 		$this->start_controls_section(
 			'section_style_heading',
@@ -449,16 +657,47 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 			)
 		);
 
+		// Spacing from heading to buttons (when stacked) or between inline elements.
 		$this->add_responsive_control(
 			'heading_spacing',
 			array(
-				'label'      => esc_html__( 'Bottom Spacing', 'content-vote' ),
-				'type'       => \Elementor\Controls_Manager::SLIDER,
+				'label'      => esc_html__( 'Spacing', 'content-vote' ),
+				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
 				'size_units' => array( 'px', 'em' ),
-				'default'    => array( 'size' => 12, 'unit' => 'px' ),
 				'selectors'  => array(
-					'{{WRAPPER}} .cv-widget__heading' => 'margin-bottom: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}} .cv-widget__heading' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
 				),
+			)
+		);
+
+		$this->end_controls_section();
+
+		// =========================================================
+		// STYLE TAB — Section: Labels & Counts
+		// =========================================================
+		$this->start_controls_section(
+			'section_style_labels',
+			array(
+				'label' => esc_html__( 'Labels & Counts', 'content-vote' ),
+				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+			)
+		);
+
+		$this->add_group_control(
+			\Elementor\Group_Control_Typography::get_type(),
+			array(
+				'name'     => 'label_typography',
+				'label'    => esc_html__( 'Label Typography', 'content-vote' ),
+				'selector' => '{{WRAPPER}} .cv-widget__label',
+			)
+		);
+
+		$this->add_group_control(
+			\Elementor\Group_Control_Typography::get_type(),
+			array(
+				'name'     => 'count_typography',
+				'label'    => esc_html__( 'Count Typography', 'content-vote' ),
+				'selector' => '{{WRAPPER}} .cv-widget__count',
 			)
 		);
 

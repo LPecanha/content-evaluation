@@ -1,33 +1,46 @@
 /**
  * Content Vote — Public Styles
  *
+ * Design intent:
+ * - Zero hardcoded colors on the button background (optional via Elementor).
+ * - All layout (direction, gap, alignment) driven by Elementor responsive selectors.
+ * - Button inner layout (icon + label) also responsive via flex-direction selector.
+ *
  * @package ContentVote
  */
 
 /* =====================================================================
-   Base widget
+   Widget container
+   — flex-direction, align-items, gap all set by Elementor selectors.
    ===================================================================== */
 .cv-widget {
 	display: flex;
-	flex-direction: column;
+	flex-direction: column;   /* default; overridden by widget_direction control */
 	align-items: flex-start;
-	gap: 8px;
+	gap: 12px;
 	font-family: inherit;
-}
-
-.cv-widget__heading {
-	margin: 0 0 12px;
-	font-size: inherit;
-	font-weight: 600;
-	color: inherit;
+	/* background, border, border-radius, box-shadow via Elementor container controls */
 }
 
 /* =====================================================================
-   Buttons row
+   Heading
+   — margin driven by heading_spacing control (DIMENSIONS, all sides).
+   ===================================================================== */
+.cv-widget__heading {
+	margin: 0;
+	font-size: inherit;
+	font-weight: 600;
+	color: inherit;
+	/* flex child — will sit inline or stacked depending on widget_direction */
+}
+
+/* =====================================================================
+   Buttons wrapper
+   — flex-direction, justify-content, gap all set by Elementor selectors.
    ===================================================================== */
 .cv-widget__buttons {
 	display: flex;
-	flex-direction: row;  /* overridden per breakpoint via Elementor selector */
+	flex-direction: row;   /* default; overridden by buttons_direction control */
 	flex-wrap: wrap;
 	gap: 12px;
 	align-items: center;
@@ -35,38 +48,47 @@
 
 /* =====================================================================
    Individual button
+   — min-width/min-height set by button_size slider so the button grows
+     with content when btn_content_direction is row.
+   — background-color intentionally NOT set here; it is optional via Elementor.
+   — flex-direction set by btn_content_direction responsive control.
    ===================================================================== */
 .cv-widget__btn {
 	display: inline-flex;
-	flex-direction: column;
+	flex-direction: column;   /* default; overridden by btn_content_direction */
 	align-items: center;
 	justify-content: center;
 	gap: 4px;
 
-	width: 56px;
-	height: 56px;
+	min-width: 56px;
+	min-height: 56px;
 
 	padding: 0;
 	margin: 0;
 	border: 2px solid transparent;
 	border-radius: 50%;
-	background-color: #f0f0f0;
+
+	/* No background-color default — set via Elementor "Normal" tab */
 	color: #555;
 
 	cursor: pointer;
-	transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+	transition:
+		background-color 0.15s ease,
+		color            0.15s ease,
+		border-color     0.15s ease,
+		transform        0.1s  ease;
 
 	-webkit-user-select: none;
 	user-select: none;
 }
 
 .cv-widget__btn:focus-visible {
-	outline: 3px solid #2196F3;
+	outline: 3px solid currentColor;
 	outline-offset: 2px;
 }
 
 .cv-widget__btn:hover:not(:disabled) {
-	background-color: #e0e0e0;
+	/* background-color hover set by Elementor; we only handle the scale */
 	transform: scale(1.07);
 }
 
@@ -79,14 +101,15 @@
 	opacity: 0.7;
 }
 
+/* Active (voted) state — bg + border-color + text set by Elementor "Voted" tab */
 .cv-widget__btn--up.is-active {
-	background-color: #2196F3;
+	background-color: #2196F3;   /* Elementor default override */
 	border-color: #2196F3;
 	color: #fff;
 }
 
 .cv-widget__btn--down.is-active {
-	background-color: #F44336;
+	background-color: #F44336;   /* Elementor default override */
 	border-color: #F44336;
 	color: #fff;
 }
@@ -113,7 +136,7 @@
 @keyframes cv-shake {
 	0%, 100% { transform: rotate(0deg); }
 	20%       { transform: rotate(-12deg) scale(1.1); }
-	40%       { transform: rotate(12deg) scale(1.1); }
+	40%       { transform: rotate(12deg)  scale(1.1); }
 	60%       { transform: rotate(-8deg); }
 	80%       { transform: rotate(8deg); }
 }
@@ -126,7 +149,6 @@
 	animation: cv-pop-down 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
-/* For emoji style — shake instead of pop */
 .cv-widget--emoji .cv-widget__btn.cv-animating {
 	animation: cv-shake 0.5s ease both;
 }
@@ -136,37 +158,33 @@
    ===================================================================== */
 .cv-widget__icon {
 	display: block;
-	width: 50%;
-	height: 50%;
-	font-size: 1em;  /* inherits button font-size so Elementor slider controls it */
+	font-size: 1em;        /* inherits button font-size — Elementor slider drives this */
 	line-height: 1;
 	fill: currentColor;
 	pointer-events: none;
+	flex-shrink: 0;
 }
 
-/* Ensure FA <i> tags also scale with the button */
-.cv-widget__btn i.cv-widget__icon {
-	width: auto;
-	height: auto;
+/* SVG icons */
+.cv-widget__btn svg.cv-widget__icon {
+	width: 1em;
+	height: 1em;
 }
 
 /* =====================================================================
-   Emoji style
+   Emoji
    ===================================================================== */
-.cv-widget--emoji .cv-widget__btn {
-	width: 56px;
-	height: 56px;
-}
-
-.cv-widget--emoji .cv-widget__emoji {
+.cv-widget__emoji {
 	display: block;
 	font-size: 1.4em;
 	line-height: 1;
 	pointer-events: none;
+	flex-shrink: 0;
 }
 
 /* =====================================================================
-   Labels & counts
+   Label & count
+   — typography controlled by Elementor group controls.
    ===================================================================== */
 .cv-widget__label {
 	display: block;
@@ -174,6 +192,7 @@
 	font-weight: 600;
 	line-height: 1;
 	pointer-events: none;
+	white-space: nowrap;
 }
 
 .cv-widget__count {
@@ -184,29 +203,25 @@
 	pointer-events: none;
 	min-width: 1ch;
 	text-align: center;
+	white-space: nowrap;
 }
 
 /* =====================================================================
    Feedback message
    ===================================================================== */
 .cv-widget__feedback {
-	min-height: 1.2em;
 	font-size: 0.85em;
 	color: #555;
 	transition: opacity 0.3s ease;
+	width: 100%;
 }
 
 .cv-widget__feedback:empty {
 	display: none;
 }
 
-.cv-widget__feedback--success {
-	color: #2e7d32;
-}
-
-.cv-widget__feedback--error {
-	color: #c62828;
-}
+.cv-widget__feedback--success { color: #2e7d32; }
+.cv-widget__feedback--error   { color: #c62828; }
 
 /* =====================================================================
    Loading spinner
