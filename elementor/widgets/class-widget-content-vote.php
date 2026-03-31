@@ -203,11 +203,20 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 			)
 		);
 
-		// Heading vs Buttons direction (the outer widget row).
+		// ----- Heading + Buttons container (.cv-widget) -----
+		$this->add_control(
+			'heading_widget',
+			array(
+				'label'     => esc_html__( 'Heading + Buttons', 'content-vote' ),
+				'type'      => \Elementor\Controls_Manager::HEADING,
+				'separator' => 'none',
+			)
+		);
+
 		$this->add_responsive_control(
 			'widget_direction',
 			array(
-				'label'          => esc_html__( 'Heading + Buttons Direction', 'content-vote' ),
+				'label'          => esc_html__( 'Direction', 'content-vote' ),
 				'type'           => \Elementor\Controls_Manager::CHOOSE,
 				'options'        => array(
 					'column' => array(
@@ -229,26 +238,44 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 			)
 		);
 
-		// Vertical alignment of heading and buttons when inline.
+		// justify-content = main axis (vertical when column, horizontal when row).
 		$this->add_responsive_control(
-			'widget_align_items',
+			'widget_justify',
 			array(
-				'label'          => esc_html__( 'Vertical Alignment', 'content-vote' ),
-				'type'           => \Elementor\Controls_Manager::CHOOSE,
-				'options'        => array(
-					'flex-start' => array( 'title' => esc_html__( 'Top', 'content-vote' ), 'icon' => 'eicon-v-align-top' ),
-					'center'     => array( 'title' => esc_html__( 'Middle', 'content-vote' ), 'icon' => 'eicon-v-align-middle' ),
-					'flex-end'   => array( 'title' => esc_html__( 'Bottom', 'content-vote' ), 'icon' => 'eicon-v-align-bottom' ),
+				'label'     => esc_html__( 'Main Axis Align', 'content-vote' ),
+				'type'      => \Elementor\Controls_Manager::CHOOSE,
+				'options'   => array(
+					'flex-start'    => array( 'title' => esc_html__( 'Start', 'content-vote' ),   'icon' => 'eicon-flex eicon-align-start-v' ),
+					'center'        => array( 'title' => esc_html__( 'Center', 'content-vote' ),  'icon' => 'eicon-flex eicon-align-center-v' ),
+					'flex-end'      => array( 'title' => esc_html__( 'End', 'content-vote' ),     'icon' => 'eicon-flex eicon-align-end-v' ),
+					'space-between' => array( 'title' => esc_html__( 'Space Between', 'content-vote' ), 'icon' => 'eicon-flex eicon-justify-space-between-v' ),
 				),
-				'default'        => 'center',
-				'selectors'      => array(
-					'{{WRAPPER}} .cv-widget' => 'align-items: {{VALUE}};',
+				'default'   => 'flex-start',
+				'selectors' => array(
+					'{{WRAPPER}} .cv-widget' => 'justify-content: {{VALUE}};',
 				),
-				'condition'      => array( 'widget_direction' => 'row' ),
 			)
 		);
 
-		// Gap between heading and buttons block.
+		// align-items = cross axis (horizontal when column, vertical when row).
+		$this->add_responsive_control(
+			'widget_align_items',
+			array(
+				'label'     => esc_html__( 'Cross Axis Align', 'content-vote' ),
+				'type'      => \Elementor\Controls_Manager::CHOOSE,
+				'options'   => array(
+					'flex-start' => array( 'title' => esc_html__( 'Start', 'content-vote' ),  'icon' => 'eicon-flex eicon-align-start-h' ),
+					'center'     => array( 'title' => esc_html__( 'Center', 'content-vote' ), 'icon' => 'eicon-flex eicon-align-center-h' ),
+					'flex-end'   => array( 'title' => esc_html__( 'End', 'content-vote' ),    'icon' => 'eicon-flex eicon-align-end-h' ),
+					'stretch'    => array( 'title' => esc_html__( 'Stretch', 'content-vote' ),'icon' => 'eicon-flex eicon-align-stretch-h' ),
+				),
+				'default'   => 'flex-start',
+				'selectors' => array(
+					'{{WRAPPER}} .cv-widget' => 'align-items: {{VALUE}};',
+				),
+			)
+		);
+
 		$this->add_responsive_control(
 			'widget_gap',
 			array(
@@ -262,19 +289,20 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 			)
 		);
 
+		// ----- Buttons row (.cv-widget__buttons) -----
 		$this->add_control(
-			'layout_divider',
+			'heading_buttons_row',
 			array(
-				'type'      => \Elementor\Controls_Manager::DIVIDER,
-				'condition' => array( 'show_heading' => 'yes' ),
+				'label'     => esc_html__( 'Buttons Row', 'content-vote' ),
+				'type'      => \Elementor\Controls_Manager::HEADING,
+				'separator' => 'before',
 			)
 		);
 
-		// Buttons row direction.
 		$this->add_responsive_control(
 			'buttons_direction',
 			array(
-				'label'          => esc_html__( 'Buttons Direction', 'content-vote' ),
+				'label'          => esc_html__( 'Direction', 'content-vote' ),
 				'type'           => \Elementor\Controls_Manager::CHOOSE,
 				'options'        => array(
 					'row'    => array(
@@ -296,21 +324,40 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 			)
 		);
 
-		// Buttons horizontal alignment.
+		// justify-content = main axis of buttons row.
 		$this->add_responsive_control(
 			'buttons_justify',
 			array(
-				'label'     => esc_html__( 'Buttons Alignment', 'content-vote' ),
+				'label'     => esc_html__( 'Main Axis Align', 'content-vote' ),
 				'type'      => \Elementor\Controls_Manager::CHOOSE,
 				'options'   => array(
-					'flex-start'    => array( 'title' => esc_html__( 'Start', 'content-vote' ), 'icon' => 'eicon-text-align-left' ),
-					'center'        => array( 'title' => esc_html__( 'Center', 'content-vote' ), 'icon' => 'eicon-text-align-center' ),
-					'flex-end'      => array( 'title' => esc_html__( 'End', 'content-vote' ), 'icon' => 'eicon-text-align-right' ),
-					'space-between' => array( 'title' => esc_html__( 'Spread', 'content-vote' ), 'icon' => 'eicon-justify-space-between-h' ),
+					'flex-start'    => array( 'title' => esc_html__( 'Start', 'content-vote' ),        'icon' => 'eicon-flex eicon-align-start-h' ),
+					'center'        => array( 'title' => esc_html__( 'Center', 'content-vote' ),       'icon' => 'eicon-flex eicon-align-center-h' ),
+					'flex-end'      => array( 'title' => esc_html__( 'End', 'content-vote' ),          'icon' => 'eicon-flex eicon-align-end-h' ),
+					'space-between' => array( 'title' => esc_html__( 'Space Between', 'content-vote' ),'icon' => 'eicon-flex eicon-justify-space-between-h' ),
 				),
 				'default'   => 'flex-start',
 				'selectors' => array(
 					'{{WRAPPER}} .cv-widget__buttons' => 'justify-content: {{VALUE}};',
+				),
+			)
+		);
+
+		// align-items = cross axis of buttons row.
+		$this->add_responsive_control(
+			'buttons_align_items',
+			array(
+				'label'     => esc_html__( 'Cross Axis Align', 'content-vote' ),
+				'type'      => \Elementor\Controls_Manager::CHOOSE,
+				'options'   => array(
+					'flex-start' => array( 'title' => esc_html__( 'Start', 'content-vote' ),   'icon' => 'eicon-flex eicon-align-start-v' ),
+					'center'     => array( 'title' => esc_html__( 'Center', 'content-vote' ),  'icon' => 'eicon-flex eicon-align-center-v' ),
+					'flex-end'   => array( 'title' => esc_html__( 'End', 'content-vote' ),     'icon' => 'eicon-flex eicon-align-end-v' ),
+					'stretch'    => array( 'title' => esc_html__( 'Stretch', 'content-vote' ), 'icon' => 'eicon-flex eicon-align-stretch-v' ),
+				),
+				'default'   => 'center',
+				'selectors' => array(
+					'{{WRAPPER}} .cv-widget__buttons' => 'align-items: {{VALUE}};',
 				),
 			)
 		);
@@ -405,11 +452,20 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 			)
 		);
 
-		// Label direction inside the button (icon + label row or column).
+		// ----- Button inner layout (icon + label) -----
+		$this->add_control(
+			'heading_btn_inner',
+			array(
+				'label'     => esc_html__( 'Button Inner Layout', 'content-vote' ),
+				'type'      => \Elementor\Controls_Manager::HEADING,
+				'separator' => 'none',
+			)
+		);
+
 		$this->add_responsive_control(
 			'btn_content_direction',
 			array(
-				'label'          => esc_html__( 'Icon + Label Direction', 'content-vote' ),
+				'label'          => esc_html__( 'Direction', 'content-vote' ),
 				'type'           => \Elementor\Controls_Manager::CHOOSE,
 				'options'        => array(
 					'column' => array(
@@ -426,8 +482,44 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 				'mobile_default' => 'column',
 				'toggle'         => false,
 				'selectors'      => array(
-					// Also set width/height to auto when row so fixed size doesn't crop.
 					'{{WRAPPER}} .cv-widget__btn' => 'flex-direction: {{VALUE}};',
+				),
+			)
+		);
+
+		// justify-content = main axis inside the button.
+		$this->add_responsive_control(
+			'btn_justify_content',
+			array(
+				'label'     => esc_html__( 'Main Axis Align', 'content-vote' ),
+				'type'      => \Elementor\Controls_Manager::CHOOSE,
+				'options'   => array(
+					'flex-start' => array( 'title' => esc_html__( 'Start', 'content-vote' ),  'icon' => 'eicon-flex eicon-align-start-v' ),
+					'center'     => array( 'title' => esc_html__( 'Center', 'content-vote' ), 'icon' => 'eicon-flex eicon-align-center-v' ),
+					'flex-end'   => array( 'title' => esc_html__( 'End', 'content-vote' ),    'icon' => 'eicon-flex eicon-align-end-v' ),
+				),
+				'default'   => 'center',
+				'selectors' => array(
+					'{{WRAPPER}} .cv-widget__btn' => 'justify-content: {{VALUE}};',
+				),
+			)
+		);
+
+		// align-items = cross axis inside the button.
+		$this->add_responsive_control(
+			'btn_align_items',
+			array(
+				'label'     => esc_html__( 'Cross Axis Align', 'content-vote' ),
+				'type'      => \Elementor\Controls_Manager::CHOOSE,
+				'options'   => array(
+					'flex-start' => array( 'title' => esc_html__( 'Start', 'content-vote' ),   'icon' => 'eicon-flex eicon-align-start-h' ),
+					'center'     => array( 'title' => esc_html__( 'Center', 'content-vote' ),  'icon' => 'eicon-flex eicon-align-center-h' ),
+					'flex-end'   => array( 'title' => esc_html__( 'End', 'content-vote' ),     'icon' => 'eicon-flex eicon-align-end-h' ),
+					'stretch'    => array( 'title' => esc_html__( 'Stretch', 'content-vote' ), 'icon' => 'eicon-flex eicon-align-stretch-h' ),
+				),
+				'default'   => 'center',
+				'selectors' => array(
+					'{{WRAPPER}} .cv-widget__btn' => 'align-items: {{VALUE}};',
 				),
 			)
 		);

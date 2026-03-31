@@ -40,10 +40,11 @@
    ===================================================================== */
 .cv-widget__buttons {
 	display: flex;
-	flex-direction: row;   /* default; overridden by buttons_direction control */
+	flex-direction: row;   /* default; overridden by buttons_direction */
 	flex-wrap: wrap;
 	gap: 12px;
-	align-items: center;
+	align-items: center;   /* default; overridden by buttons_align_items */
+	justify-content: flex-start; /* default; overridden by buttons_justify */
 }
 
 /* =====================================================================
@@ -56,8 +57,8 @@
 .cv-widget__btn {
 	display: inline-flex;
 	flex-direction: column;   /* default; overridden by btn_content_direction */
-	align-items: center;
-	justify-content: center;
+	align-items: center;      /* default; overridden by btn_align_items */
+	justify-content: center;  /* default; overridden by btn_justify_content */
 	gap: 4px;
 
 	min-width: 56px;
