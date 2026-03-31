@@ -83,27 +83,31 @@ class Content_Vote_Admin {
 		}
 
 		$filters  = self::get_filters_from_request();
-		$per_page = 25;
+		$per_page = 20;
 		$paged    = max( 1, (int) ( $_GET['paged'] ?? 1 ) ); // phpcs:ignore WordPress.Security.NonceVerification
 		$offset   = ( $paged - 1 ) * $per_page;
+		// phpcs:disable WordPress.Security.NonceVerification
+		$orderby  = sanitize_text_field( $_GET['orderby'] ?? 'total_votes' );
+		$order    = sanitize_text_field( $_GET['order']   ?? 'DESC' );
+		// phpcs:enable WordPress.Security.NonceVerification
 
-		$report = Content_Vote_Database::get_report(
-			array_merge(
-				$filters,
-				array(
-					'per_page' => $per_page,
-					'offset'   => $offset,
-					'orderby'  => sanitize_text_field( $_GET['orderby'] ?? 'total_votes' ), // phpcs:ignore WordPress.Security.NonceVerification
-					'order'    => sanitize_text_field( $_GET['order'] ?? 'DESC' ), // phpcs:ignore WordPress.Security.NonceVerification
-				)
-			)
-		);
+		// Page-level aggregates (one row per page).
+		$page_summaries = Content_Vote_Database::get_pages_summary( $filters, $per_page, $offset, $orderby, $order );
+		$total_pages_db = Content_Vote_Database::get_pages_count( $filters );
+		$total_pages    = (int) ceil( $total_pages_db / $per_page );
+
+		// Section details for the pages on the current result page.
+		$page_urls = array_column( $page_summaries, 'page_url' );
+		$sections_flat = Content_Vote_Database::get_sections_by_page_urls( $page_urls, $filters );
+
+		// Group sections by page_url for easy lookup in the view.
+		$sections_map = array();
+		foreach ( $sections_flat as $section ) {
+			$sections_map[ $section['page_url'] ][] = $section;
+		}
 
 		$pages_with_titles = Content_Vote_Database::get_voted_pages_with_titles();
 		$months            = Content_Vote_Database::get_voted_months();
-		$total_rows        = $report['total'];
-		$rows              = $report['rows'];
-		$total_pages       = (int) ceil( $total_rows / $per_page );
 
 		// Pass data to the view via variables (no globals).
 		require CONTENT_VOTE_PATH . 'admin/views/report-page.php';

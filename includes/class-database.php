@@ -204,6 +204,150 @@ class Content_Vote_Database {
 	}
 
 	/**
+	 * Builds a reusable WHERE clause and params array from filter options.
+	 *
+	 * @param array $filters
+	 * @return array{0: string, 1: array}  [$where_clause, $params]
+	 */
+	private static function build_where( array $filters ): array {
+		$where  = array( '1=1' );
+		$params = array();
+
+		if ( ! empty( $filters['page_url'] ) ) {
+			$where[]  = 'page_url = %s';
+			$params[] = sanitize_url( $filters['page_url'] );
+		}
+
+		if ( ! empty( $filters['month'] ) ) {
+			$where[]  = "DATE_FORMAT(voted_at, '%%Y-%%m') = %s";
+			$params[] = sanitize_text_field( $filters['month'] );
+		} elseif ( ! empty( $filters['date_from'] ) || ! empty( $filters['date_to'] ) ) {
+			if ( ! empty( $filters['date_from'] ) ) {
+				$where[]  = 'voted_at >= %s';
+				$params[] = sanitize_text_field( $filters['date_from'] ) . ' 00:00:00';
+			}
+			if ( ! empty( $filters['date_to'] ) ) {
+				$where[]  = 'voted_at <= %s';
+				$params[] = sanitize_text_field( $filters['date_to'] ) . ' 23:59:59';
+			}
+		}
+
+		return array( implode( ' AND ', $where ), $params );
+	}
+
+	/**
+	 * Returns page-level vote aggregates (one row per page), paginated.
+	 * Used for the grouped admin report.
+	 *
+	 * @param array  $filters
+	 * @param int    $per_page
+	 * @param int    $offset
+	 * @param string $orderby  Allowed: page_url | total_up | total_down | total_votes | section_count | last_vote
+	 * @param string $order    ASC | DESC
+	 *
+	 * @return list<array>
+	 */
+	public static function get_pages_summary( array $filters, int $per_page, int $offset, string $orderby, string $order ): array {
+		global $wpdb;
+
+		$table = self::table();
+		[ $where_clause, $params ] = self::build_where( $filters );
+
+		$allowed  = array( 'page_url', 'total_up', 'total_down', 'total_votes', 'section_count', 'last_vote' );
+		$orderby  = in_array( $orderby, $allowed, true ) ? $orderby : 'total_votes';
+		$order    = 'ASC' === strtoupper( $order ) ? 'ASC' : 'DESC';
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$query = "SELECT
+				page_url,
+				SUM( CASE WHEN vote_type = 1 THEN 1 ELSE 0 END )  AS total_up,
+				SUM( CASE WHEN vote_type = -1 THEN 1 ELSE 0 END ) AS total_down,
+				COUNT(*)                                            AS total_votes,
+				COUNT( DISTINCT section_id )                        AS section_count,
+				MAX( voted_at )                                     AS last_vote
+			FROM {$table}
+			WHERE {$where_clause}
+			GROUP BY page_url
+			ORDER BY {$orderby} {$order}
+			LIMIT %d OFFSET %d";
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		$all_params = array_merge( $params, array( $per_page, $offset ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_results( $wpdb->prepare( $query, ...$all_params ), ARRAY_A );
+
+		return $rows ?: array();
+	}
+
+	/**
+	 * Returns the total number of distinct pages that have votes, respecting filters.
+	 *
+	 * @param array $filters
+	 * @return int
+	 */
+	public static function get_pages_count( array $filters ): int {
+		global $wpdb;
+
+		$table = self::table();
+		[ $where_clause, $params ] = self::build_where( $filters );
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$query = "SELECT COUNT( DISTINCT page_url ) FROM {$table} WHERE {$where_clause}";
+
+		if ( ! empty( $params ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+			return (int) $wpdb->get_var( $wpdb->prepare( $query, ...$params ) );
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+		return (int) $wpdb->get_var( $query );
+	}
+
+	/**
+	 * Returns section-level details for a list of page URLs, respecting filters.
+	 * Results are ordered page_url ASC, total_votes DESC.
+	 *
+	 * @param list<string> $page_urls
+	 * @param array        $filters
+	 *
+	 * @return list<array>
+	 */
+	public static function get_sections_by_page_urls( array $page_urls, array $filters ): array {
+		global $wpdb;
+
+		if ( empty( $page_urls ) ) {
+			return array();
+		}
+
+		$table = self::table();
+		[ $where_clause, $params ] = self::build_where( $filters );
+
+		$placeholders = implode( ', ', array_fill( 0, count( $page_urls ), '%s' ) );
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$query = "SELECT
+				page_url,
+				section_id,
+				SUM( CASE WHEN vote_type = 1 THEN 1 ELSE 0 END )  AS total_up,
+				SUM( CASE WHEN vote_type = -1 THEN 1 ELSE 0 END ) AS total_down,
+				COUNT(*)                                            AS total_votes,
+				MAX( voted_at )                                     AS last_vote
+			FROM {$table}
+			WHERE {$where_clause} AND page_url IN ({$placeholders})
+			GROUP BY page_url, section_id
+			ORDER BY page_url ASC, total_votes DESC";
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		$all_params = array_merge( $params, $page_urls );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_results( $wpdb->prepare( $query, ...$all_params ), ARRAY_A );
+
+		return $rows ?: array();
+	}
+
+	/**
 	 * Returns aggregated report data grouped by page_url + section_id.
 	 *
 	 * @param array{

@@ -1,9 +1,8 @@
 /**
  * Content Vote — Admin Script
  *
- * Minimal enhancements for the report page:
- * - Clears the date-from/date-to inputs if the other is cleared.
- * - Validates that date_from is not after date_to before submission.
+ * - Expand/collapse section rows per page row (accordion).
+ * - "Expand All" / "Collapse All" global buttons.
  *
  * @package ContentVote
  */
@@ -11,29 +10,76 @@
 ( function () {
 	'use strict';
 
-	const form     = document.querySelector( '.cv-filters' );
-	const dateFrom = document.getElementById( 'cv-date-from' );
-	const dateTo   = document.getElementById( 'cv-date-to' );
+	/**
+	 * Expands a page group: shows its section rows and updates ARIA/icon state.
+	 *
+	 * @param {HTMLElement} pageRow  The .cv-row--page element.
+	 */
+	function expandGroup( pageRow ) {
+		const groupId = pageRow.dataset.group;
+		if ( ! groupId ) return;
 
-	if ( ! form || ! dateFrom || ! dateTo ) return;
+		pageRow.setAttribute( 'aria-expanded', 'true' );
 
-	form.addEventListener( 'submit', function ( event ) {
-		const from = dateFrom.value;
-		const to   = dateTo.value;
-
-		if ( from && to && from > to ) {
-			event.preventDefault();
-			// Use a simple WP-style notice rather than an alert.
-			let notice = form.querySelector( '.cv-date-notice' );
-			if ( ! notice ) {
-				notice = document.createElement( 'p' );
-				notice.className = 'cv-date-notice description' ;
-				notice.style.color = '#c62828';
-				form.appendChild( notice );
-			}
-			notice.textContent = ( typeof wpI18n !== 'undefined' && wpI18n.__ )
-				? wpI18n.__( '"From" date cannot be after "To" date.', 'content-vote' )
-				: '"From" date cannot be after "To" date.';
+		const toggleBtn = pageRow.querySelector( '.cv-toggle-btn' );
+		if ( toggleBtn ) {
+			toggleBtn.setAttribute( 'aria-expanded', 'true' );
 		}
+
+		document.querySelectorAll( `tr[data-parent="${ groupId }"]` ).forEach( ( row ) => {
+			row.removeAttribute( 'hidden' );
+		} );
+	}
+
+	/**
+	 * Collapses a page group: hides its section rows and resets ARIA/icon state.
+	 *
+	 * @param {HTMLElement} pageRow  The .cv-row--page element.
+	 */
+	function collapseGroup( pageRow ) {
+		const groupId = pageRow.dataset.group;
+		if ( ! groupId ) return;
+
+		pageRow.setAttribute( 'aria-expanded', 'false' );
+
+		const toggleBtn = pageRow.querySelector( '.cv-toggle-btn' );
+		if ( toggleBtn ) {
+			toggleBtn.setAttribute( 'aria-expanded', 'false' );
+		}
+
+		document.querySelectorAll( `tr[data-parent="${ groupId }"]` ).forEach( ( row ) => {
+			row.setAttribute( 'hidden', '' );
+		} );
+	}
+
+	/**
+	 * Toggles the expanded state of a page group.
+	 *
+	 * @param {HTMLElement} pageRow
+	 */
+	function toggleGroup( pageRow ) {
+		const isExpanded = pageRow.getAttribute( 'aria-expanded' ) === 'true';
+		isExpanded ? collapseGroup( pageRow ) : expandGroup( pageRow );
+	}
+
+	// ---- Per-row toggle (click on expandable row or its toggle button) ----
+	document.querySelectorAll( '.cv-row--expandable' ).forEach( ( pageRow ) => {
+		// Clicking anywhere on the page row toggles it.
+		pageRow.addEventListener( 'click', function ( event ) {
+			// Prevent toggling when clicking the external link inside the cell.
+			if ( event.target.closest( 'a' ) ) return;
+			toggleGroup( pageRow );
+		} );
 	} );
+
+	// ---- Expand All / Collapse All ----
+	document.querySelectorAll( '.cv-expand-all' ).forEach( ( btn ) => {
+		btn.addEventListener( 'click', function () {
+			const action = btn.dataset.action;
+			document.querySelectorAll( '.cv-row--expandable' ).forEach( ( pageRow ) => {
+				action === 'expand' ? expandGroup( pageRow ) : collapseGroup( pageRow );
+			} );
+		} );
+	} );
+
 } )();

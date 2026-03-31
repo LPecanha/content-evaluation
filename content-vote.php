@@ -3,7 +3,7 @@
  * Plugin Name:       Content Evaluation
  * Plugin URI:        https://github.com/LPecanha/content-evaluation
  * Description:       Entenda o que realmente ressoa com sua audiência. O Content Evaluation adiciona um widget ao Elementor que permite aos visitantes avaliarem cada seção do seu conteúdo — com ícones, emojis ou thumbs — e consolida tudo em um painel de relatórios para que você tome decisões baseadas em dados reais.
- * Version:           1.2.2
+ * Version:           1.3.0
  * Author:            Lucas Peçanha
  * Author URI:        https://lucaspecanha.com.br
  * License:           GPL-2.0+
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CONTENT_VOTE_VERSION', '1.2.2' );
+define( 'CONTENT_VOTE_VERSION', '1.3.0' );
 define( 'CONTENT_VOTE_PATH', plugin_dir_path( __FILE__ ) );
 define( 'CONTENT_VOTE_URL', plugin_dir_url( __FILE__ ) );
 define( 'CONTENT_VOTE_BASENAME', plugin_basename( __FILE__ ) );
