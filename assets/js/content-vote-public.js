@@ -24,24 +24,28 @@
 	const CV = window.ContentVote;
 
 	/**
-	 * localStorage key for a given section ID.
+	 * localStorage key scoped to both page URL and section ID.
+	 * Including the page URL prevents vote state from leaking across pages
+	 * that share the same section ID (e.g. "hero", "section-1").
 	 *
 	 * @param {string} sectionId
+	 * @param {string} pageUrl
 	 * @returns {string}
 	 */
-	function storageKey( sectionId ) {
-		return 'cv_vote_' + sectionId;
+	function storageKey( sectionId, pageUrl ) {
+		return 'cv_vote_' + pageUrl + '__' + sectionId;
 	}
 
 	/**
-	 * Reads the previously stored vote type for a section.
+	 * Reads the previously stored vote type for a section on a specific page.
 	 *
 	 * @param {string} sectionId
+	 * @param {string} pageUrl
 	 * @returns {number|null} 1, -1, or null
 	 */
-	function getStoredVote( sectionId ) {
+	function getStoredVote( sectionId, pageUrl ) {
 		try {
-			const raw = localStorage.getItem( storageKey( sectionId ) );
+			const raw = localStorage.getItem( storageKey( sectionId, pageUrl ) );
 			return raw !== null ? parseInt( raw, 10 ) : null;
 		} catch {
 			return null;
@@ -53,10 +57,11 @@
 	 *
 	 * @param {string} sectionId
 	 * @param {number} voteType  1 or -1
+	 * @param {string} pageUrl
 	 */
-	function storeVote( sectionId, voteType ) {
+	function storeVote( sectionId, voteType, pageUrl ) {
 		try {
-			localStorage.setItem( storageKey( sectionId ), String( voteType ) );
+			localStorage.setItem( storageKey( sectionId, pageUrl ), String( voteType ) );
 		} catch {
 			// localStorage unavailable (private browsing etc.) — silently ignore.
 		}
@@ -216,7 +221,7 @@
 		const downCountEl = widget.querySelector( '.cv-widget__btn--down .cv-widget__count' );
 		const prevUp      = upCountEl   ? parseInt( upCountEl.textContent,   10 ) || 0 : 0;
 		const prevDown    = downCountEl ? parseInt( downCountEl.textContent, 10 ) || 0 : 0;
-		const prevVote    = getStoredVote( sectionId );
+		const prevVote    = getStoredVote( sectionId, pageUrl );
 
 		// --- Optimistic UI update ---
 		let newUp   = prevUp;
@@ -234,7 +239,7 @@
 
 		updateCounts( widget, newUp, newDown );
 		setActiveButton( widget, voteType );
-		storeVote( sectionId, voteType );
+		storeVote( sectionId, voteType, pageUrl );
 
 		// --- Disable buttons during request ---
 		const allButtons = widget.querySelectorAll( '.cv-widget__btn' );
@@ -270,7 +275,7 @@
 					// Server is the source of truth for final counts.
 					updateCounts( widget, json.data.up, json.data.down );
 					setActiveButton( widget, json.data.user_vote );
-					storeVote( sectionId, json.data.user_vote );
+					storeVote( sectionId, json.data.user_vote, pageUrl );
 					// Only animate when a vote was cast (not when removed).
 					if ( json.data.user_vote !== 0 ) {
 						triggerAnimation( clickedBtn );
@@ -279,7 +284,7 @@
 					// Revert optimistic update.
 					updateCounts( widget, prevUp, prevDown );
 					setActiveButton( widget, prevVote );
-					if ( prevVote !== null ) storeVote( sectionId, prevVote );
+					if ( prevVote !== null ) storeVote( sectionId, prevVote, pageUrl );
 					const errMsg = ( json.data && json.data.message ) ? json.data.message : CV.i18n.error;
 					showFeedback( widget, errMsg, true );
 				}
@@ -291,7 +296,7 @@
 				// Revert optimistic update on network error.
 				updateCounts( widget, prevUp, prevDown );
 				setActiveButton( widget, prevVote );
-				if ( prevVote !== null ) storeVote( sectionId, prevVote );
+				if ( prevVote !== null ) storeVote( sectionId, prevVote, pageUrl );
 				showFeedback( widget, CV.i18n.error, true );
 			} );
 	}
@@ -308,8 +313,10 @@
 			return;
 		}
 
-		// Restore voted state from localStorage.
-		const storedVote = getStoredVote( sectionId );
+		const pageUrl = widget.dataset.cvPageUrl || window.location.href;
+
+		// Restore voted state from localStorage, scoped to this page URL.
+		const storedVote = getStoredVote( sectionId, pageUrl );
 		if ( storedVote !== null ) {
 			setActiveButton( widget, storedVote );
 		}
@@ -334,7 +341,8 @@
 			return;
 		}
 
-		const prevVoteType = getStoredVote( sectionId );
+		const pageUrl      = widget.dataset.cvPageUrl || window.location.href;
+		const prevVoteType = getStoredVote( sectionId, pageUrl );
 		// If clicking the same button that is already active → toggle off (send 0).
 		const voteType = ( prevVoteType === rawVoteType ) ? 0 : rawVoteType;
 
