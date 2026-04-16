@@ -803,10 +803,13 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 			? sanitize_html_class( $settings['section_id_override'] )
 			: '';
 
+		// Normalize the page URL the same way the server will when storing votes,
+		// so client-side localStorage keys match the server's canonical URL.
+		$page_url = Content_Vote_Handler::normalize_url( home_url( add_query_arg( array() ) ) );
+
 		$counts = array( 'up' => 0, 'down' => 0 );
-		if ( ! empty( $section_id ) ) {
-			$page_url = trailingslashit( strtolower( home_url( add_query_arg( array() ) ) ) );
-			$counts   = Content_Vote_Database::get_counts( $section_id, $page_url );
+		if ( ! empty( $section_id ) && ! empty( $page_url ) ) {
+			$counts = Content_Vote_Database::get_counts( $section_id, $page_url );
 		}
 
 		$show_counts  = 'yes' === ( $settings['show_counts'] ?? 'yes' );
@@ -816,7 +819,7 @@ class Content_Vote_Widget extends \Elementor\Widget_Base {
 		?>
 		<div class="cv-widget cv-widget--<?php echo esc_attr( $style ); ?>"
 			data-cv-section-id="<?php echo esc_attr( $section_id ); ?>"
-			data-cv-page-url="<?php echo esc_url( home_url( add_query_arg( array() ) ) ); ?>">
+			data-cv-page-url="<?php echo esc_url( $page_url ); ?>">
 
 			<?php if ( $show_heading && ! empty( $settings['heading_text'] ) ) : ?>
 				<p class="cv-widget__heading"><?php echo esc_html( $settings['heading_text'] ); ?></p>

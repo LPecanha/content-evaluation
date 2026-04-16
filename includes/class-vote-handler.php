@@ -46,7 +46,7 @@ class Content_Vote_Handler {
 
 		// --- Validate & normalise page_url ----------------------------------------
 		$raw_url  = sanitize_url( $payload['page_url'] ?? '' );
-		$page_url = self::normalise_url( $raw_url );
+		$page_url = self::normalize_url( $raw_url );
 		if ( empty( $page_url ) ) {
 			return self::error( __( 'Invalid page URL.', 'content-vote' ) );
 		}
@@ -120,13 +120,16 @@ class Content_Vote_Handler {
 	}
 
 	/**
-	 * Normalises a URL: strips query string, fragments; lowercases host; ensures trailing slash.
+	 * Normalises a URL: strips query string, fragments; lowercases scheme+host;
+	 * ensures trailing slash. Public so the widget can emit the exact same
+	 * value in data-cv-page-url, keeping client-side localStorage keys in sync
+	 * with the URL the server stores under.
 	 *
 	 * @param string $url Raw URL.
 	 *
 	 * @return string
 	 */
-	private static function normalise_url( string $url ): string {
+	public static function normalize_url( string $url ): string {
 		$parts = wp_parse_url( $url );
 		if ( empty( $parts['scheme'] ) || empty( $parts['host'] ) ) {
 			return '';

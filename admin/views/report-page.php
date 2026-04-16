@@ -23,32 +23,40 @@ if ( ! defined( 'ABSPATH' ) ) {
 $current_orderby = sanitize_text_field( $_GET['orderby'] ?? 'total_votes' ); // phpcs:ignore WordPress.Security.NonceVerification
 $current_order   = 'ASC' === strtoupper( $_GET['order'] ?? '' ) ? 'ASC' : 'DESC'; // phpcs:ignore WordPress.Security.NonceVerification
 
-/**
- * Converts a slug-style section ID to a human-readable label.
- */
-function cv_humanize_section_id( string $id ): string {
-	return ucwords( str_replace( array( '-', '_' ), ' ', $id ) );
-}
-
-/**
- * Converts a YYYY-MM string to a localised "Month Year" label.
- */
-function cv_month_label( string $ym ): string {
-	$ts = strtotime( $ym . '-01' );
-	return $ts ? wp_date( 'F Y', $ts ) : $ym;
-}
-
-/**
- * Builds a sortable column header anchor.
- */
-function cv_sort_link( string $column, string $label, string $current_col, string $current_dir ): string {
-	$new_order = ( $current_col === $column && 'DESC' === $current_dir ) ? 'ASC' : 'DESC';
-	$indicator = '';
-	if ( $current_col === $column ) {
-		$indicator = 'ASC' === $current_dir ? ' &#8593;' : ' &#8595;';
+// Helpers guarded with function_exists so re-including the view in the same
+// request (e.g. unusual controller flows) does not trigger a fatal redeclaration.
+if ( ! function_exists( 'cv_humanize_section_id' ) ) {
+	/**
+	 * Converts a slug-style section ID to a human-readable label.
+	 */
+	function cv_humanize_section_id( string $id ): string {
+		return ucwords( str_replace( array( '-', '_' ), ' ', $id ) );
 	}
-	$url = add_query_arg( array( 'orderby' => $column, 'order' => $new_order ) );
-	return '<a href="' . esc_url( $url ) . '">' . esc_html( $label ) . $indicator . '</a>';
+}
+
+if ( ! function_exists( 'cv_month_label' ) ) {
+	/**
+	 * Converts a YYYY-MM string to a localised "Month Year" label.
+	 */
+	function cv_month_label( string $ym ): string {
+		$ts = strtotime( $ym . '-01' );
+		return $ts ? wp_date( 'F Y', $ts ) : $ym;
+	}
+}
+
+if ( ! function_exists( 'cv_sort_link' ) ) {
+	/**
+	 * Builds a sortable column header anchor. Resets pagination on sort change.
+	 */
+	function cv_sort_link( string $column, string $label, string $current_col, string $current_dir ): string {
+		$new_order = ( $current_col === $column && 'DESC' === $current_dir ) ? 'ASC' : 'DESC';
+		$indicator = '';
+		if ( $current_col === $column ) {
+			$indicator = 'ASC' === $current_dir ? ' &#8593;' : ' &#8595;';
+		}
+		$url = add_query_arg( array( 'orderby' => $column, 'order' => $new_order, 'paged' => 1 ) );
+		return '<a href="' . esc_url( $url ) . '">' . esc_html( $label ) . $indicator . '</a>';
+	}
 }
 
 // Build URL → title lookup.
@@ -90,7 +98,7 @@ foreach ( $pages_with_titles as $p ) {
 
 			<button type="submit" class="button button-primary"><?php esc_html_e( 'Filter', 'content-vote' ); ?></button>
 
-			<?php if ( ! empty( $filters['page_url'] ) || ! empty( $filters['month'] ) ) : ?>
+			<?php if ( array_filter( $filters ) ) : ?>
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=content-evaluation' ) ); ?>" class="button">
 					<?php esc_html_e( 'Clear', 'content-vote' ); ?>
 				</a>
@@ -127,9 +135,11 @@ foreach ( $pages_with_titles as $p ) {
 					add_query_arg(
 						array_filter(
 							array(
-								'action'          => 'content_vote_export_csv',
-								'filter_page_url' => $filters['page_url'],
-								'filter_month'    => $filters['month'],
+								'action'            => 'content_vote_export_csv',
+								'filter_page_url'   => $filters['page_url'],
+								'filter_month'      => $filters['month'],
+								'filter_date_from'  => $filters['date_from'] ?? '',
+								'filter_date_to'    => $filters['date_to'] ?? '',
 							)
 						),
 						admin_url( 'admin-post.php' )

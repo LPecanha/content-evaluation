@@ -66,11 +66,12 @@ class Content_Vote_Database {
 	public static function get_existing_vote( string $visitor_hash, string $section_id, string $page_url ): ?int {
 		global $wpdb;
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$table = self::table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$result = $wpdb->get_var(
 			$wpdb->prepare(
-				'SELECT vote_type FROM %i WHERE visitor_hash = %s AND section_id = %s AND page_url = %s LIMIT 1',
-				self::table(),
+				"SELECT vote_type FROM {$table} WHERE visitor_hash = %s AND section_id = %s AND page_url = %s LIMIT 1",
 				$visitor_hash,
 				$section_id,
 				$page_url
@@ -105,6 +106,10 @@ class Content_Vote_Database {
 			),
 			array( '%s', '%s', '%s', '%d', '%s' )
 		);
+
+		if ( false !== $result ) {
+			self::invalidate_voted_pages_cache();
+		}
 
 		return false !== $result;
 	}
@@ -178,11 +183,12 @@ class Content_Vote_Database {
 	public static function get_counts( string $section_id, string $page_url ): array {
 		global $wpdb;
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$table = self::table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				'SELECT vote_type, COUNT(*) as total FROM %i WHERE section_id = %s AND page_url = %s GROUP BY vote_type',
-				self::table(),
+				"SELECT vote_type, COUNT(*) as total FROM {$table} WHERE section_id = %s AND page_url = %s GROUP BY vote_type",
 				$section_id,
 				$page_url
 			),
@@ -365,40 +371,15 @@ class Content_Vote_Database {
 	public static function get_report( array $filters ): array {
 		global $wpdb;
 
-		$table    = self::table();
-		$where    = array( '1=1' );
-		$params   = array();
-
-		// Filter: specific page URL.
-		if ( ! empty( $filters['page_url'] ) ) {
-			$where[]  = 'page_url = %s';
-			$params[] = sanitize_url( $filters['page_url'] );
-		}
-
-		// Filter: month (YYYY-MM format — takes priority over date_from/date_to).
-		if ( ! empty( $filters['month'] ) ) {
-			$month    = sanitize_text_field( $filters['month'] );
-			$where[]  = "DATE_FORMAT(voted_at, '%%Y-%%m') = %s";
-			$params[] = $month;
-		} elseif ( ! empty( $filters['date_from'] ) || ! empty( $filters['date_to'] ) ) {
-			if ( ! empty( $filters['date_from'] ) ) {
-				$where[]  = 'voted_at >= %s';
-				$params[] = sanitize_text_field( $filters['date_from'] ) . ' 00:00:00';
-			}
-			if ( ! empty( $filters['date_to'] ) ) {
-				$where[]  = 'voted_at <= %s';
-				$params[] = sanitize_text_field( $filters['date_to'] ) . ' 23:59:59';
-			}
-		}
-
-		$where_clause = implode( ' AND ', $where );
+		$table                   = self::table();
+		[ $where_clause, $params ] = self::build_where( $filters );
 
 		// Allowed orderby columns to prevent SQL injection.
 		$allowed_orderby = array( 'page_url', 'section_id', 'total_up', 'total_down', 'total_votes', 'last_vote' );
 		$orderby         = in_array( $filters['orderby'] ?? '', $allowed_orderby, true ) ? $filters['orderby'] : 'total_votes';
 		$order           = 'ASC' === strtoupper( $filters['order'] ?? '' ) ? 'ASC' : 'DESC';
 
-		$per_page = max( 1, min( 100, (int) ( $filters['per_page'] ?? 25 ) ) );
+		$per_page = max( 1, min( 10000, (int) ( $filters['per_page'] ?? 25 ) ) );
 		$offset   = max( 0, (int) ( $filters['offset'] ?? 0 ) );
 
 		// Build aggregate query.
@@ -444,23 +425,34 @@ class Content_Vote_Database {
 	public static function get_voted_pages(): array {
 		global $wpdb;
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$rows = $wpdb->get_col(
-			$wpdb->prepare( 'SELECT DISTINCT page_url FROM %i ORDER BY page_url ASC', self::table() )
-		);
+		$table = self::table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_col( "SELECT DISTINCT page_url FROM {$table} ORDER BY page_url ASC" );
 
 		return $rows ?: array();
 	}
 
 	/**
+	 * Cache key for the voted-pages-with-titles result.
+	 */
+	const VOTED_PAGES_CACHE_KEY = 'cv_voted_pages_titles';
+
+	/**
 	 * Returns voted pages with their WordPress post titles.
 	 *
-	 * Uses url_to_postid() to resolve each URL to a post. Falls back to the
-	 * raw URL when no matching post is found (e.g. custom routes).
+	 * Results are cached in a transient to avoid running one url_to_postid()
+	 * query per URL on every admin page load. Cache is invalidated whenever
+	 * a new vote is inserted on a previously-unseen URL.
 	 *
 	 * @return list<array{url: string, title: string}>
 	 */
 	public static function get_voted_pages_with_titles(): array {
+		$cached = get_transient( self::VOTED_PAGES_CACHE_KEY );
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+
 		$urls   = self::get_voted_pages();
 		$result = array();
 
@@ -476,7 +468,17 @@ class Content_Vote_Database {
 		// Sort alphabetically by title.
 		usort( $result, fn( $a, $b ) => strcmp( $a['title'], $b['title'] ) );
 
+		set_transient( self::VOTED_PAGES_CACHE_KEY, $result, HOUR_IN_SECONDS );
+
 		return $result;
+	}
+
+	/**
+	 * Invalidates the voted-pages cache. Called after inserts so newly-voted
+	 * URLs appear in the admin filter dropdown on the next page load.
+	 */
+	public static function invalidate_voted_pages_cache(): void {
+		delete_transient( self::VOTED_PAGES_CACHE_KEY );
 	}
 
 	/**
@@ -487,12 +489,11 @@ class Content_Vote_Database {
 	public static function get_voted_months(): array {
 		global $wpdb;
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$table = self::table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
 		$rows = $wpdb->get_col(
-			$wpdb->prepare(
-				"SELECT DISTINCT DATE_FORMAT(voted_at, '%%Y-%%m') AS month FROM %i ORDER BY month DESC",
-				self::table()
-			)
+			"SELECT DISTINCT DATE_FORMAT(voted_at, '%Y-%m') AS month FROM {$table} ORDER BY month DESC"
 		);
 
 		return $rows ?: array();

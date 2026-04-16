@@ -123,11 +123,7 @@ class Content_Vote_Admin {
 
 		check_admin_referer( 'content_vote_export_csv' );
 
-		$filters = self::get_filters_from_request();
-		$report  = Content_Vote_Database::get_report(
-			array_merge( $filters, array( 'per_page' => 10000, 'offset' => 0 ) )
-		);
-
+		$filters  = self::get_filters_from_request();
 		$filename = 'content-vote-report-' . gmdate( 'Y-m-d' ) . '.csv';
 
 		// Send CSV headers.
@@ -153,19 +149,34 @@ class Content_Vote_Admin {
 			)
 		);
 
-		foreach ( $report['rows'] as $row ) {
-			fputcsv(
-				$output,
-				array(
-					$row['page_url'],
-					$row['section_id'],
-					$row['total_up'],
-					$row['total_down'],
-					$row['total_votes'],
-					$row['last_vote'],
-				)
+		// Stream rows in chunks so memory stays bounded regardless of dataset size.
+		$chunk_size = 500;
+		$offset     = 0;
+		do {
+			$report = Content_Vote_Database::get_report(
+				array_merge( $filters, array( 'per_page' => $chunk_size, 'offset' => $offset ) )
 			);
-		}
+			foreach ( $report['rows'] as $row ) {
+				fputcsv(
+					$output,
+					array(
+						$row['page_url'],
+						$row['section_id'],
+						$row['total_up'],
+						$row['total_down'],
+						$row['total_votes'],
+						$row['last_vote'],
+					)
+				);
+			}
+			$fetched = count( $report['rows'] );
+			$offset += $chunk_size;
+			// Flush output so the browser receives bytes progressively on very large exports.
+			if ( function_exists( 'ob_get_level' ) && ob_get_level() > 0 ) {
+				@ob_flush();
+			}
+			flush();
+		} while ( $fetched === $chunk_size );
 
 		fclose( $output );
 		exit;
@@ -179,8 +190,10 @@ class Content_Vote_Admin {
 	private static function get_filters_from_request(): array {
 		// phpcs:disable WordPress.Security.NonceVerification
 		return array(
-			'page_url' => ! empty( $_GET['filter_page_url'] ) ? sanitize_url( wp_unslash( $_GET['filter_page_url'] ) ) : '',
-			'month'    => ! empty( $_GET['filter_month'] ) ? sanitize_text_field( wp_unslash( $_GET['filter_month'] ) ) : '',
+			'page_url'  => ! empty( $_GET['filter_page_url'] ) ? sanitize_url( wp_unslash( $_GET['filter_page_url'] ) ) : '',
+			'month'     => ! empty( $_GET['filter_month'] ) ? sanitize_text_field( wp_unslash( $_GET['filter_month'] ) ) : '',
+			'date_from' => ! empty( $_GET['filter_date_from'] ) ? sanitize_text_field( wp_unslash( $_GET['filter_date_from'] ) ) : '',
+			'date_to'   => ! empty( $_GET['filter_date_to'] ) ? sanitize_text_field( wp_unslash( $_GET['filter_date_to'] ) ) : '',
 		);
 		// phpcs:enable WordPress.Security.NonceVerification
 	}
